@@ -16,3 +16,14 @@ multiple Windows 11 computers over a local network.
 ## Status
 
 DEMO development.
+
+## Screenshots
+
+### Dashboard
+![NetScope Dashboard](screenshots/dashboard.png)
+
+### Devices
+![NetScope Devices](screenshots/devices.png)
+
+### Settings
+![NetScope Settings](screenshots/settings.png)
