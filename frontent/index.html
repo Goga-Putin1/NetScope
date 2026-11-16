@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#0b0c0e">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <title>NetScope | Dashboard</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    
+<!-- HEADER -->
+<header class="header">
+
+    <div>
+        <h1>NetScope</h1>
+        <p>Network Monitoring Dashboard</p>
+    </div>
+
+    <nav class="navigation">
+    <a href="index.html" class="active">Dashboard</a>
+    <a href="devices.html">Devices</a>
+    <a href="settings.html">Settings</a>
+</nav>
+
+    <div class="connection">
+        <span class="status-dot"></span>
+        <span>Local Network Connected</span>
+    </div>
+
+</header>
+
+
+
+    <!-- MAIN CONTAINER -->
+    <main class="container">
+
+        <!-- WELCOME -->
+        <section class="welcome">
+
+            <h2>Welcome to NetScope</h2>
+
+            <p>
+                Monitor and manage your computers in real time.
+            </p>
+
+        </section>
+
+
+        <!-- STATISTICS -->
+        
+<section class="stats">
+
+    <div class="card">
+        <span>Total Devices</span>
+        <h3 id="total-devices">0</h3>
+    </div>
+
+    <div class="card">
+        <span>Online Devices</span>
+        <h3 id="online-devices">0</h3>
+    </div>
+
+    <div class="card">
+        <span>Average CPU Usage</span>
+        <h3 id="average-cpu">0%</h3>
+    </div>
+
+</section>
+
+
+
+        <!-- RESOURCE CHART -->
+        <section class="charts-section">
+
+            <h2>Resource Usage</h2>
+
+            <div class="chart-card">
+
+                <h3>CPU & RAM History</h3>
+
+                <div class="chart-wrap">
+                    <canvas id="resourceChart"></canvas>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- CONNECTED DEVICES -->
+        <section class="devices-section">
+
+            <h2>Connected Devices</h2>
+
+            <!-- ВАЖНО: ID должен совпадать с app.js -->
+            <div id="device-list" class="device-list"></div>
+
+        </section>
+
+    </main>
+
+
+    <!-- JAVASCRIPT -->
+    <script src="js/app.js"></script>
+
+</body>
+</html>

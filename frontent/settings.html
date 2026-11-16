@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#0b0c0e">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <title>NetScope — Settings</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <header class="header">
+        <div>
+            <h1>NetScope</h1>
+            <p>Network Monitoring System</p>
+        </div>
+
+        <nav class="navigation">
+            <a href="index.html">Dashboard</a>
+            <a href="devices.html">Devices</a>
+            <a href="settings.html" class="active">Settings</a>
+        </nav>
+    </header>
+
+
+    <main class="container">
+
+        <section class="welcome">
+            <h2>Settings</h2>
+            <p>Управление аккаунтом и подключёнными устройствами</p>
+        </section>
+
+
+        <!-- ACCOUNT -->
+        <section class="settings-section">
+
+            <h2>Account</h2>
+
+            <div class="settings-card account-card">
+
+                <div class="account-avatar">NS</div>
+
+                <div class="account-info">
+                    <h3 id="account-name">NetScope User</h3>
+                    <p id="account-email">demo@netscope.local</p>
+                    <span class="account-status">
+                        ● Demo account
+                    </span>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- CONNECTED DEVICES -->
+        <section class="settings-section">
+
+            <div class="settings-heading">
+                <div>
+                    <h2>Connected Devices</h2>
+                    <p>Компьютеры, подключённые по уникальному коду</p>
+                </div>
+
+                <button class="primary-button" id="show-add-device">
+                    + Добавить устройство
+                </button>
+            </div>
+
+
+            <!-- ADD DEVICE FORM -->
+            <form id="add-device-form" class="settings-card add-device-form" hidden novalidate>
+
+                <h3>Подключить устройство</h3>
+
+                <p class="form-hint">
+                    Введите уникальный код, который показывает агент NetScope
+                    на нужном компьютере. Входить в аккаунт на нём не нужно.
+                </p>
+
+                <label for="device-code">
+                    Код устройства
+                </label>
+
+                <input
+                    type="text"
+                    id="device-code"
+                    class="code-input"
+                    placeholder="NS-XXXX-XXXX"
+                    autocomplete="off"
+                    autocapitalize="characters"
+                    spellcheck="false"
+                    required
+                >
+
+                <div class="form-actions">
+                    <button type="submit" class="primary-button" id="submit-add-device">
+                        Подключить
+                    </button>
+
+                    <button type="button" class="secondary-button" id="cancel-add-device">
+                        Отмена
+                    </button>
+
+                    <button type="button" class="text-button" id="fill-demo-code">
+                        Подставить демо-код
+                    </button>
+                </div>
+
+                <p id="device-form-message" class="form-message" role="status"></p>
+
+            </form>
+
+
+            <div class="settings-card">
+
+                <div class="settings-device-list" id="settings-device-list"></div>
+
+            </div>
+
+        </section>
+
+
+        <!-- LOGIN SESSIONS -->
+        <section class="settings-section">
+
+            <h2>Login Sessions</h2>
+            <p class="settings-description">
+                Сеансы входа в веб-панель NetScope
+            </p>
+
+            <div class="settings-card">
+
+                <div class="session-item">
+
+                    <div class="session-icon">PC</div>
+
+                    <div class="session-info">
+                        <strong>Current Browser</strong>
+                        <span>Текущий сеанс</span>
+                    </div>
+
+                    <span class="session-status">Current</span>
+
+                </div>
+
+                <div class="session-item">
+
+                    <div class="session-icon">DEMO</div>
+
+                    <div class="session-info">
+                        <strong>Demo Session</strong>
+                        <span>Демонстрационный сеанс</span>
+                    </div>
+
+                    <span class="session-status inactive">Demo</span>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <script src="js/settings.js"></script>
+
+</body>
+</html>

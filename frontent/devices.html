@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#0b0c0e">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <title>NetScope — Devices</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header class="header">
+
+        <div>
+            <h1>NetScope</h1>
+            <p>Network Monitoring System</p>
+        </div>
+
+        <nav class="navigation">
+    <a href="index.html">Dashboard</a>
+    <a href="devices.html" class="active">Devices</a>
+    <a href="settings.html">Settings</a>
+</nav>
+
+    </header>
+
+
+    <!-- MAIN CONTAINER -->
+    <main class="container">
+
+        <!-- WELCOME -->
+        <section class="welcome">
+            <h2>Devices</h2>
+            <p>Все компьютеры локальной сети</p>
+        </section>
+
+
+        <!-- DEVICE CONTROLS -->
+        <section class="device-controls">
+
+            <div class="search-box">
+                <input
+                    type="text"
+                    id="device-search"
+                    placeholder="Поиск по имени или IP..."
+                    autocomplete="off"
+                >
+            </div>
+
+            <div class="filter-box">
+
+                <select id="status-filter">
+                    <option value="all">Все устройства</option>
+                    <option value="online">Online</option>
+                    <option value="offline">Offline</option>
+                </select>
+
+                <select id="sort-filter">
+                    <option value="name-asc">Имя: A → Z</option>
+                    <option value="name-desc">Имя: Z → A</option>
+                    <option value="cpu-desc">CPU: по убыванию</option>
+                    <option value="cpu-asc">CPU: по возрастанию</option>
+                </select>
+
+                <button id="reset-filters" type="button">
+                    Сбросить
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- DEVICE COUNT -->
+        <div class="device-count">
+            Найдено устройств: <strong id="device-count">0</strong>
+        </div>
+
+
+        <!-- DEVICES TABLE -->
+        <section class="table-card">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Device</th>
+                        <th>IP Address</th>
+                        <th>CPU</th>
+                        <th>RAM</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody id="devices-table"></tbody>
+
+            </table>
+
+        </section>
+
+    </main>
+
+
+    <!-- JAVASCRIPT -->
+    <script src="js/devices.js"></script>
+
+</body>
+</html>
