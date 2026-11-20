@@ -69,12 +69,13 @@ function getResourceClass(value) {
 function createResourceBar(label, value, online) {
     const numericValue = Math.max(0, Math.min(100, Number(value) || 0));
     const displayedValue = online ? numericValue : 0;
+    const resource = label.toLowerCase();
 
     return `
-        <div class="resource">
+        <div class="resource" data-rosource="${resource}">
             <div class="resource-info">
                 <span>${label}</span>
-                <span>${displayedValue}%</span>
+                <span class="resource-value">${displayedValue}%</span>
             </div>
 
             <div class="progress">
@@ -95,7 +96,7 @@ if (deviceList) {
             data-device-index="${index}"
         >
             <div class="device-heading">
-                <h3>${escapeHTML(device.name)}</h3>
+                <h3 data-device-name>${escapeHTML(device.name)}</h3>
 
                 <span class="device-status ${device.online ? "online" : "offline"}">
                     <span class="status-dot ${device.online ? "online" : "offline"}"></span>
@@ -131,12 +132,12 @@ if (deviceList) {
 
                     <div class="detail-item">
                         <span>CPU Usage</span>
-                        <strong>${device.online ? Number(device.cpu) || 0 : 0}%</strong>
+                        <strong data-detail-cpu>${device.online ? Number(device.cpu) || 0 : 0}%</strong>
                     </div>
 
                     <div class="detail-item">
                         <span>RAM Usage</span>
-                        <strong>${device.online ? Number(device.ram) || 0 : 0}%</strong>
+                        <strong data-detail-ram>${device.online ? Number(device.ram) || 0 : 0}%</strong>
                     </div>
 
                     <div class="detail-item">
@@ -203,8 +204,98 @@ function updateStatistics() {
 }
 
 updateStatistics();
+// ==========================================
+// Получение реальных метрик с Backend
+// ==========================================
 
+async function fetchRealMetrics() {
+try {
+const response = await fetch("/api/metrics");
 
+    if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status}`);
+    }
+
+    const metrics = await response.json();
+    const device = devices[0];
+
+    if (!device) return;
+
+    device.name = metrics.computer || device.name;
+    device.cpu = Number(metrics.cpu_usage) || 0;
+    device.ram = Number(metrics.ram_usage) || 0;
+    device.online = true;
+
+    const card = deviceList?.querySelector(
+        '[data-device-index="0"]'
+    );
+
+    if (card) {
+        const name = card.querySelector("[data-device-name]");
+        if (name) name.textContent = device.name;
+
+        const status = card.querySelector(".device-status");
+        const dot = card.querySelector(".status-dot");
+
+        if (status) {
+            status.classList.remove("offline");
+            status.classList.add("online");
+            status.textContent = "Online";
+        }
+
+        if (dot) {
+            dot.classList.remove("offline");
+            dot.classList.add("online");
+        }
+
+        ["cpu", "ram"].forEach(resource => {
+            const element = card.querySelector(
+                `[data-resource="${resource}"]`
+            );
+
+            if (!element) return;
+
+            const value = resource === "cpu"
+                ? device.cpu
+                : device.ram;
+
+            const safeValue = Math.max(0, Math.min(100, value));
+
+const valueElement = element.querySelector(".resource-value");
+const fill = element.querySelector(".progress-fill");
+
+if (valueElement) {
+    valueElement.textContent = `${safeValue.toFixed(2)}%`;
+}
+
+if (fill) {
+    fill.style.width = `${safeValue}%`;
+    fill.className = `progress-fill ${getResourceClass(safeValue)}`;
+}
+});
+
+const detailCPU = card.querySelector("[data-detail-cpu]");
+const detailRAM = card.querySelector("[data-detail-ram]");
+
+if (detailCPU) {
+    detailCPU.textContent = `${device.cpu.toFixed(2)}%`;
+}
+
+if (detailRAM) {
+    detailRAM.textContent = `${device.ram.toFixed(2)}%`;
+}
+        }
+
+        updateStatistics();
+
+    } catch (error) {
+        console.error("Не удалось получить метрики:", error);
+    }
+}
+
+// Первый запрос и обновление каждую секунду
+fetchRealMetrics();
+setInterval(fetchRealMetrics, 1000);
 // ==========================================
 // График CPU и RAM (демо, значения случайные)
 // Рисуется на canvas, внешние библиотеки не нужны
@@ -259,19 +350,20 @@ if (chartCanvas && chartCanvas.getContext) {
     const clamp = (value, min, max) =>
         Math.max(min, Math.min(max, value));
 
-    // Генерация нового тестового показателя (случайное блуждание)
-    function pushSample(time) {
+    // Получение реальных показателей устройства
+function pushSample(time) {
 
-        cpuValue = clamp(cpuValue + (Math.random() * 10 - 5), 5, 95);
-        ramValue = clamp(ramValue + (Math.random() * 4 - 2), 10, 95);
+const mainDevice = devices[0];
 
-        samples.push({
-            t: time,
-            cpu: cpuValue,
-            ram: ramValue
-        });
+cpuValue = clamp(Number(mainDevice?.cpu) || 0, 0, 100);
+ramValue = clamp(Number(mainDevice?.ram) || 0, 0, 100);
 
-    }
+samples.push({
+    t: time,
+    cpu: cpuValue,
+    ram: ramValue
+});
+}
 
     // Начальная история
     const startTime = Date.now();
