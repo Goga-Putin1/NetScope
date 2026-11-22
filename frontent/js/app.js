@@ -262,8 +262,6 @@ async function fetchRealMetrics() {
         }
 
         updateStatistics();
-<<<<<<< HEAD
-=======
     } catch (error) {
         console.error("Не удалось получить метрики:", error);
     }
@@ -272,7 +270,6 @@ async function fetchRealMetrics() {
 // Первый запрос и обновление каждую секунду
 fetchRealMetrics();
 setInterval(fetchRealMetrics, 1000);
->>>>>>> cdd74eb (Rebuild NetScope code)
 // ==========================================
 // График CPU и RAM (демо, значения случайные)
 // Рисуется на canvas, внешние библиотеки не нужны
