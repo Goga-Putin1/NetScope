@@ -2,45 +2,40 @@
 // NetScope — Dashboard
 // ==========================================
 
-// Тестовые устройства
-const devices = [
-    {
-        name: "Main-PC",
-        ip: "192.168.1.10",
-        cpu: 24,
-        ram: 58,
-        online: true
-    },
-    {
-        name: "Gaming-PC",
-        ip: "192.168.1.11",
-        cpu: 67,
-        ram: 72,
-        online: true
-    },
-    {
-        name: "Office-PC",
-        ip: "192.168.1.12",
-        cpu: 0,
-        ram: 0,
-        online: false
-    }
+const STORAGE_KEY = "netscope-devices";
+const SERVER_URL_KEY = "netscope-server-url";
+
+function normalizeDevice(device) {
+    if (!device || typeof device !== "object") return null;
+
+    return {
+        name: String(device.name || "Unknown device"),
+        ip: String(device.ip || ""),
+        cpu: Number(device.cpu) || 0,
+        ram: Number(device.ram) || 0,
+        online: Boolean(device.online)
+    };
+}
+
+const DEFAULT_DEVICES = [
+    { name: "Main-PC", ip: "192.168.1.10", cpu: 24, ram: 58, online: true },
+    { name: "Gaming-PC", ip: "192.168.1.11", cpu: 67, ram: 72, online: true },
+    { name: "Office-PC", ip: "192.168.1.12", cpu: 0, ram: 0, online: false }
 ];
 
-// Загрузка устройств, добавленных в Settings
-try {
-    const savedDevices = localStorage.getItem("netscope-devices");
-
-    if (savedDevices) {
-        const parsedDevices = JSON.parse(savedDevices);
-
-        if (Array.isArray(parsedDevices)) {
-            devices.splice(0, devices.length, ...parsedDevices);
-        }
+function loadDevices() {
+    try {
+        const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+        return Array.isArray(parsed)
+            ? parsed.map(normalizeDevice).filter(Boolean)
+            : DEFAULT_DEVICES.map(normalizeDevice);
+    } catch (error) {
+        console.error("Не удалось загрузить устройства:", error);
+        return DEFAULT_DEVICES.map(normalizeDevice);
     }
-} catch (error) {
-    console.error("Не удалось загрузить устройства:", error);
 }
+
+const devices = loadDevices();
 
 // Безопасное отображение пользовательского текста
 function escapeHTML(value) {
@@ -209,84 +204,75 @@ updateStatistics();
 // ==========================================
 
 async function fetchRealMetrics() {
-try {
-const response = await fetch("/api/metrics");
+    try {
+        const configuredServer = localStorage.getItem(SERVER_URL_KEY);
+        const endpoint = `${(configuredServer || window.location.origin).replace(/\/$/, "")}/api/metrics`;
+        const response = await fetch(endpoint, { cache: "no-store" });
 
-    if (!response.ok) {
-        throw new Error(`HTTP error: ${response.status}`);
-    }
-
-    const metrics = await response.json();
-    const device = devices[0];
-
-    if (!device) return;
-
-    device.name = metrics.computer || device.name;
-    device.cpu = Number(metrics.cpu_usage) || 0;
-    device.ram = Number(metrics.ram_usage) || 0;
-    device.online = true;
-
-    const card = deviceList?.querySelector(
-        '[data-device-index="0"]'
-    );
-
-    if (card) {
-        const name = card.querySelector("[data-device-name]");
-        if (name) name.textContent = device.name;
-
-        const status = card.querySelector(".device-status");
-        const dot = card.querySelector(".status-dot");
-
-        if (status) {
-            status.classList.remove("offline");
-            status.classList.add("online");
-            status.textContent = "Online";
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
         }
 
-        if (dot) {
-            dot.classList.remove("offline");
-            dot.classList.add("online");
-        }
+        const metrics = await response.json();
+        const device = devices[0];
+        if (!device) return;
 
-        ["cpu", "ram"].forEach(resource => {
-            const element = card.querySelector(
-                `[data-resource="${resource}"]`
-            );
+        device.name = metrics.computer || device.name;
+        device.cpu = Number(metrics.cpu_usage) || 0;
+        device.ram = Number(metrics.ram_usage) || 0;
+        device.online = true;
 
-            if (!element) return;
+        const card = deviceList?.querySelector('[data-device-index="0"]');
+        if (card) {
+            const name = card.querySelector("[data-device-name]");
+            if (name) name.textContent = device.name;
 
-            const value = resource === "cpu"
-                ? device.cpu
-                : device.ram;
+            const status = card.querySelector(".device-status");
+            const dot = card.querySelector(".status-dot");
+            if (status) {
+                status.classList.remove("offline");
+                status.classList.add("online");
+                status.textContent = "Online";
+            }
+            if (dot) {
+                dot.classList.remove("offline");
+                dot.classList.add("online");
+            }
 
-            const safeValue = Math.max(0, Math.min(100, value));
+            ["cpu", "ram"].forEach(resource => {
+                const element = card.querySelector(`[data-resource="${resource}"]`);
+                if (!element) return;
 
-const valueElement = element.querySelector(".resource-value");
-const fill = element.querySelector(".progress-fill");
+                const value = resource === "cpu" ? device.cpu : device.ram;
+                const safeValue = Math.max(0, Math.min(100, value));
+                const valueElement = element.querySelector(".resource-value");
+                const fill = element.querySelector(".progress-fill");
 
-if (valueElement) {
-    valueElement.textContent = `${safeValue.toFixed(2)}%`;
-}
+                if (valueElement) valueElement.textContent = `${safeValue.toFixed(2)}%`;
+                if (fill) {
+                    fill.style.width = `${safeValue}%`;
+                    fill.className = `progress-fill ${getResourceClass(safeValue)}`;
+                }
+            });
 
-if (fill) {
-    fill.style.width = `${safeValue}%`;
-    fill.className = `progress-fill ${getResourceClass(safeValue)}`;
-}
-});
-
-const detailCPU = card.querySelector("[data-detail-cpu]");
-const detailRAM = card.querySelector("[data-detail-ram]");
-
-if (detailCPU) {
-    detailCPU.textContent = `${device.cpu.toFixed(2)}%`;
-}
-
-if (detailRAM) {
-    detailRAM.textContent = `${device.ram.toFixed(2)}%`;
-}
+            const detailCPU = card.querySelector("[data-detail-cpu]");
+            const detailRAM = card.querySelector("[data-detail-ram]");
+            if (detailCPU) detailCPU.textContent = `${device.cpu.toFixed(2)}%`;
+            if (detailRAM) detailRAM.textContent = `${device.ram.toFixed(2)}%`;
         }
 
         updateStatistics();
+<<<<<<< HEAD
+=======
+    } catch (error) {
+        console.error("Не удалось получить метрики:", error);
+    }
+}
+
+// Первый запрос и обновление каждую секунду
+fetchRealMetrics();
+setInterval(fetchRealMetrics, 1000);
+>>>>>>> cdd74eb (Rebuild NetScope code)
 // ==========================================
 // График CPU и RAM (демо, значения случайные)
 // Рисуется на canvas, внешние библиотеки не нужны

@@ -30,6 +30,7 @@ const defaultDevices = [
 ];
 
 const STORAGE_KEY = "netscope-devices";
+const SERVER_URL_KEY = "netscope-server-url";
 
 // Формат кода: NS-XXXX-XXXX (8 символов после префикса)
 const CODE_PREFIX = "NS";
@@ -93,6 +94,25 @@ const demoCodeButton = document.getElementById("fill-demo-code");
 const codeInput = document.getElementById("device-code");
 
 const message = document.getElementById("device-form-message");
+const serverForm = document.getElementById("server-form");
+const serverUrlInput = document.getElementById("server-url");
+const serverFormMessage = document.getElementById("server-form-message");
+
+serverUrlInput.value = localStorage.getItem(SERVER_URL_KEY) || window.location.origin;
+serverForm.addEventListener("submit", event => {
+    event.preventDefault();
+
+    try {
+        const parsed = new URL(serverUrlInput.value.trim());
+        if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error("Invalid protocol");
+        localStorage.setItem(SERVER_URL_KEY, parsed.origin);
+        serverFormMessage.textContent = "Адрес сохранён.";
+        serverFormMessage.className = "form-message success";
+    } catch {
+        serverFormMessage.textContent = "Введите корректный адрес, например http://192.168.1.20:8080.";
+        serverFormMessage.className = "form-message error";
+    }
+});
 
 
 // Безопасное отображение пользовательского текста

@@ -4,45 +4,31 @@
 // ==========================================
 
 
-// Тестовые устройства
-const devices = [
-    {
-        name: "Main-PC",
-        ip: "192.168.1.10",
-        cpu: 24,
-        ram: 58,
-        online: true
-    },
-    {
-        name: "Gaming-PC",
-        ip: "192.168.1.11",
-        cpu: 67,
-        ram: 72,
-        online: true
-    },
-    {
-        name: "Office-PC",
-        ip: "192.168.1.12",
-        cpu: 0,
-        ram: 0,
-        online: false
-    }
+const DEFAULT_DEVICES = [
+    { name: "Main-PC", ip: "192.168.1.10", cpu: 24, ram: 58, online: true },
+    { name: "Gaming-PC", ip: "192.168.1.11", cpu: 67, ram: 72, online: true },
+    { name: "Office-PC", ip: "192.168.1.12", cpu: 0, ram: 0, online: false }
 ];
 
-// Загрузка устройств, добавленных в Settings
-try {
-    const savedDevices = localStorage.getItem("netscope-devices");
+function loadDevices() {
+    try {
+        const saved = JSON.parse(localStorage.getItem("netscope-devices") || "null");
+        if (!Array.isArray(saved)) return DEFAULT_DEVICES;
 
-    if (savedDevices) {
-        const parsedDevices = JSON.parse(savedDevices);
-
-        if (Array.isArray(parsedDevices)) {
-            devices.splice(0, devices.length, ...parsedDevices);
-        }
+        return saved.filter(device => device && typeof device === "object").map(device => ({
+            name: String(device.name || "Unknown device"),
+            ip: String(device.ip || ""),
+            cpu: Number(device.cpu) || 0,
+            ram: Number(device.ram) || 0,
+            online: Boolean(device.online)
+        }));
+    } catch (error) {
+        console.error("Не удалось загрузить устройства:", error);
+        return DEFAULT_DEVICES;
     }
-} catch (error) {
-    console.error("Не удалось загрузить устройства:", error);
 }
+
+let devices = loadDevices();
 
 
 // Безопасное отображение пользовательского текста
@@ -215,6 +201,12 @@ function renderDevices() {
 
 // Поиск
 searchInput.addEventListener("input", renderDevices);
+
+window.addEventListener("storage", event => {
+    if (event.key !== "netscope-devices") return;
+    devices = loadDevices();
+    renderDevices();
+});
 
 
 // Фильтр статуса
