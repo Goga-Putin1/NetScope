@@ -36,6 +36,14 @@ function clamp(value) {
     return Math.max(0, Math.min(100, Number(value) || 0));
 }
 
+function formatMemory(value) {
+    return `${Number(value || 0).toFixed(1)} ГБ`;
+}
+
+function formatLastSeen(timestamp) {
+    return timestamp ? new Date(timestamp * 1000).toLocaleTimeString() : "Нет данных";
+}
+
 function resourceClass(value) {
     if (value >= 80) return "high";
     if (value >= 60) return "medium";
@@ -67,7 +75,10 @@ function renderDevices() {
                     <div class="detail-item"><span>IP Address</span><strong>${escapeHTML(device.ip || "не определён")}</strong></div>
                     <div class="detail-item"><span>CPU Usage</span><strong>${device.online ? clamp(device.cpu).toFixed(1) : "0.0"}%</strong></div>
                     <div class="detail-item"><span>RAM Usage</span><strong>${device.online ? clamp(device.ram).toFixed(1) : "0.0"}%</strong></div>
+                    <div class="detail-item"><span>Использовано RAM</span><strong>${formatMemory(device.ramUsed)}</strong></div>
+                    <div class="detail-item"><span>Всего RAM</span><strong>${formatMemory(device.ramTotal)}</strong></div>
                     <div class="detail-item"><span>Windows</span><strong>${escapeHTML(device.windows)}</strong></div>
+                    <div class="detail-item"><span>Последний сигнал</span><strong>${formatLastSeen(device.lastSeen)}</strong></div>
                     <div class="detail-item"><span>Connection</span><strong>${device.online ? "Connected" : "Disconnected"}</strong></div>
                 </div>
             </div>

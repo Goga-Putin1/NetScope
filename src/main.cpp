@@ -1,3 +1,8 @@
+#include <winsock2.h>
+#include <iphlpapi.h>
+#include <ws2tcpip.h>
+
+#include <deque>
 #include <filesystem>
 #include <iomanip>
 #include <iostream>
@@ -16,18 +21,53 @@
 
 namespace {
 
+struct MetricSample {
+    long long timestamp = 0;
+    double cpu = 0.0;
+    double ram = 0.0;
+};
+
 struct DeviceMetrics {
     std::string computer;
+    std::string ip;
     std::string windows;
     double cpu = 0.0;
     double ram = 0.0;
     double ramUsed = 0.0;
     double ramTotal = 0.0;
     long long lastSeen = 0;
+    std::deque<MetricSample> history;
 };
 
 std::mutex devicesMutex;
 std::map<std::string, DeviceMetrics> devices;
+
+std::vector<std::string> getLocalIPv4Addresses()
+{
+    ULONG bufferSize = 15000;
+    std::vector<char> buffer(bufferSize);
+    auto* adapters = reinterpret_cast<IP_ADAPTER_ADDRESSES*>(buffer.data());
+    ULONG result = GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER, nullptr, adapters, &bufferSize);
+    if (result == ERROR_BUFFER_OVERFLOW) {
+        buffer.resize(bufferSize);
+        adapters = reinterpret_cast<IP_ADAPTER_ADDRESSES*>(buffer.data());
+        result = GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER, nullptr, adapters, &bufferSize);
+    }
+
+    std::vector<std::string> addresses;
+    if (result != NO_ERROR) return addresses;
+    for (auto* adapter = adapters; adapter; adapter = adapter->Next) {
+        if (adapter->OperStatus != IfOperStatusUp || adapter->IfType == IF_TYPE_SOFTWARE_LOOPBACK) continue;
+        for (auto* address = adapter->FirstUnicastAddress; address; address = address->Next) {
+            char text[INET_ADDRSTRLEN] = {};
+            const auto* ipv4 = reinterpret_cast<const sockaddr_in*>(address->Address.lpSockaddr);
+            if (InetNtopA(AF_INET, const_cast<IN_ADDR*>(&ipv4->sin_addr), text, sizeof(text))) {
+                addresses.emplace_back(text);
+            }
+        }
+    }
+    return addresses;
+}
 
 long long nowUnix()
 {
@@ -89,10 +129,18 @@ std::filesystem::path findFrontendDirectory()
     return {};
 }
 
+void addSample(DeviceMetrics& device)
+{
+    device.history.push_back({device.lastSeen, device.cpu, device.ram});
+    while (device.history.size() > 180) device.history.pop_front();
+}
+
 void updateLocalDevice()
 {
     DeviceMetrics local;
     local.computer = getComputerName();
+    const auto addresses = getLocalIPv4Addresses();
+    local.ip = addresses.empty() ? "127.0.0.1" : addresses.front();
     local.windows = getWindowsVersion();
     local.cpu = getCpuUsage();
     local.ram = getRamUsage();
@@ -101,7 +149,16 @@ void updateLocalDevice()
     local.lastSeen = nowUnix();
 
     std::lock_guard<std::mutex> lock(devicesMutex);
-    devices[local.computer] = local;
+    auto& stored = devices[local.computer];
+    stored.computer = local.computer;
+    stored.ip = local.ip;
+    stored.windows = local.windows;
+    stored.cpu = local.cpu;
+    stored.ram = local.ram;
+    stored.ramUsed = local.ramUsed;
+    stored.ramTotal = local.ramTotal;
+    stored.lastSeen = local.lastSeen;
+    addSample(stored);
 }
 
 std::string devicesJson()
@@ -119,6 +176,7 @@ std::string devicesJson()
         const bool online = (now - d.lastSeen) <= 10;
         json << "{"
              << "\"computer\":\"" << escapeJson(d.computer) << "\","
+             << "\"ip\":\"" << escapeJson(d.ip) << "\","
              << "\"windows\":\"" << escapeJson(d.windows) << "\","
              << "\"cpu_usage\":" << d.cpu << ","
              << "\"ram_usage\":" << d.ram << ","
@@ -127,6 +185,26 @@ std::string devicesJson()
              << "\"online\":" << (online ? "true" : "false") << ","
              << "\"last_seen\":" << d.lastSeen
              << "}";
+    }
+    json << "]";
+    return json.str();
+}
+
+std::string historyJson(const std::string& computer)
+{
+    std::ostringstream json;
+    json << std::fixed << std::setprecision(2) << "[";
+    std::lock_guard<std::mutex> lock(devicesMutex);
+    const auto it = devices.find(computer);
+    if (it == devices.end()) return "[]";
+
+    bool first = true;
+    for (const auto& sample : it->second.history) {
+        if (!first) json << ",";
+        first = false;
+        json << "{\"timestamp\":" << sample.timestamp
+             << ",\"cpu\":" << sample.cpu
+             << ",\"ram\":" << sample.ram << "}";
     }
     json << "]";
     return json.str();
@@ -205,6 +283,7 @@ int main(int argc, char* argv[])
 
         DeviceMetrics d;
         d.computer = req.get_param_value("computer");
+        d.ip = req.remote_addr;
         d.windows = req.get_param_value("windows");
 
         if (d.computer.empty() || d.computer.size() > 128 ||
@@ -220,7 +299,16 @@ int main(int argc, char* argv[])
         d.lastSeen = nowUnix();
         {
             std::lock_guard<std::mutex> lock(devicesMutex);
-            devices[d.computer] = d;
+            auto& stored = devices[d.computer];
+            stored.computer = d.computer;
+            stored.ip = d.ip;
+            stored.windows = d.windows;
+            stored.cpu = d.cpu;
+            stored.ram = d.ram;
+            stored.ramUsed = d.ramUsed;
+            stored.ramTotal = d.ramTotal;
+            stored.lastSeen = d.lastSeen;
+            addSample(stored);
         }
         response.set_content("OK", "text/plain");
     });
@@ -232,8 +320,36 @@ int main(int argc, char* argv[])
         response.set_header("Access-Control-Allow-Origin", "*");
     });
 
+    server.Get("/api/device/history", [](const httplib::Request& req, httplib::Response& response) {
+        if (!req.has_param("computer")) {
+            response.status = 400;
+            response.set_content("Missing computer", "text/plain");
+            return;
+        }
+        response.set_content(historyJson(req.get_param_value("computer")), "application/json; charset=UTF-8");
+        response.set_header("Cache-Control", "no-store");
+        response.set_header("Access-Control-Allow-Origin", "*");
+    });
+
+    server.Get("/api/server-info", [port](const httplib::Request&, httplib::Response& response) {
+        const auto addresses = getLocalIPv4Addresses();
+        std::ostringstream json;
+        json << "{\"port\":" << port << ",\"addresses\":[";
+        for (size_t index = 0; index < addresses.size(); ++index) {
+            if (index) json << ",";
+            json << "\"" << escapeJson(addresses[index]) << "\"";
+        }
+        json << "]}";
+        response.set_content(json.str(), "application/json; charset=UTF-8");
+        response.set_header("Cache-Control", "no-store");
+    });
+
     std::cout << "NetScope HTTP Server started on port " << port << std::endl;
-    std::cout << "Dashboard: http://<server-ip>:" << port << "/" << std::endl;
+    const auto serverAddresses = getLocalIPv4Addresses();
+    for (const auto& address : serverAddresses) {
+        std::cout << "Dashboard: http://" << address << ":" << port << "/" << std::endl;
+        std::cout << "Agent command: netscope_agent.exe " << address << " " << port << std::endl;
+    }
     std::cout << "Devices API: http://<server-ip>:" << port << "/api/devices" << std::endl;
     std::cout << "Agent endpoint: POST http://<server-ip>:" << port << "/api/agent/metrics" << std::endl;
 

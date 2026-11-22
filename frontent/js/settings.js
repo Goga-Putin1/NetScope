@@ -34,10 +34,28 @@ async function renderDevices() {
     }
 }
 
-showAddButton.addEventListener("click", () => {
+showAddButton.addEventListener("click", async () => {
     addForm.hidden = false;
-    message.textContent = "Запустите netscope_agent.exe <адрес-сервера> 8080 на компьютере для мониторинга.";
+    message.textContent = "Определяю адрес сервера...";
     message.className = "form-message";
+
+    try {
+        const response = await fetch(`${window.location.origin}/api/server-info`, { cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const serverInfo = await response.json();
+        const addresses = Array.isArray(serverInfo.addresses) ? serverInfo.addresses : [];
+        const port = Number(serverInfo.port) || 8080;
+        const commands = addresses.map(address => `netscope_agent.exe ${address} ${port}`);
+
+        if (commands.length) {
+            message.innerHTML = `Запустите агент на другом компьютере одной из команд:<br>${commands.map(command => `<code>${escapeHTML(command)}</code>`).join("<br>")}`;
+        } else {
+            message.textContent = `Не удалось определить LAN-адрес. Запустите: netscope_agent.exe <IP-сервера> ${port}`;
+        }
+    } catch (error) {
+        message.textContent = "Backend недоступен. Запустите сервер NetScope и обновите страницу.";
+        console.error("Не удалось получить адрес сервера:", error);
+    }
 });
 
 cancelButton.addEventListener("click", () => {
