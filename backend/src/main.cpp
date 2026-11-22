@@ -12,14 +12,14 @@ int main()
 
     httplib::Server server;
 
-    // Раздача frontend-файлов
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ frontend-пїЅпїЅпїЅпїЅпїЅпїЅ
     if (!server.set_mount_point("/", "../frontent"))
     {
         std::cerr << "ERROR: Frontend folder not found!" << std::endl;
         return 1;
     }
 
-    // API метрик
+    // API пїЅпїЅпїЅпїЅпїЅпїЅ
     server.Get("/api/metrics", [](const httplib::Request& req,
         httplib::Response& res)
         {
@@ -47,7 +47,7 @@ int main()
     std::cout << "Dashboard: http://localhost:8080/" << std::endl;
     std::cout << "API: http://localhost:8080/api/metrics" << std::endl;
 
-    server.listen("127.0.0.1", 8080);
+    server.listen("0.0.0.0", 8080);
 
     return 0;
 }

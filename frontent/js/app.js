@@ -287,15 +287,6 @@ if (detailRAM) {
         }
 
         updateStatistics();
-
-    } catch (error) {
-        console.error("Не удалось получить метрики:", error);
-    }
-}
-
-// Первый запрос и обновление каждую секунду
-fetchRealMetrics();
-setInterval(fetchRealMetrics, 1000);
 // ==========================================
 // График CPU и RAM (демо, значения случайные)
 // Рисуется на canvas, внешние библиотеки не нужны
