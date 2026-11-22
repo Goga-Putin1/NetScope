@@ -1,4 +1,3 @@
-
 cmake_minimum_required(VERSION 3.20)
 
 project(NetScopeBackend LANGUAGES CXX)
@@ -17,18 +16,18 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(httplib)
 
+# Main server: hosts the dashboard and receives agent metrics.
 add_executable(netscope_backend
     src/main.cpp
     src/metrics.cpp
 )
-
 target_include_directories(netscope_backend PRIVATE include)
 target_link_libraries(netscope_backend PRIVATE httplib::httplib)
 
+# Agent: collects metrics locally and sends them to the main server.
 add_executable(netscope_agent
-    ../src/agent.cpp
+    src/agent.cpp
     src/metrics.cpp
 )
-
 target_include_directories(netscope_agent PRIVATE include)
 target_link_libraries(netscope_agent PRIVATE httplib::httplib)
