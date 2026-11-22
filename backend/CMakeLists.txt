@@ -23,5 +23,12 @@ add_executable(netscope_backend
 )
 
 target_include_directories(netscope_backend PRIVATE include)
-
 target_link_libraries(netscope_backend PRIVATE httplib::httplib)
+
+add_executable(netscope_agent
+    ../src/agent.cpp
+    src/metrics.cpp
+)
+
+target_include_directories(netscope_agent PRIVATE include)
+target_link_libraries(netscope_agent PRIVATE httplib::httplib)

@@ -88,7 +88,13 @@
 
             <div class="chart-card">
 
-                <h3>CPU & RAM History</h3>
+                <div class="chart-heading">
+                    <div>
+                        <h3>CPU & RAM History</h3>
+                        <p id="selected-device-label">Выберите устройство ниже</p>
+                    </div>
+                    <select id="chart-device-select" aria-label="Устройство для графика"></select>
+                </div>
 
                 <div class="chart-wrap">
                     <canvas id="resourceChart"></canvas>

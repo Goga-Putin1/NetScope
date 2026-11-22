@@ -44,15 +44,6 @@
         <!-- ACCOUNT -->
         <section class="settings-section">
 
-            <h2>Monitoring Server</h2>
-            <p class="settings-description">Адрес компьютера, на котором запущен NetScope backend.</p>
-            <form id="server-form" class="settings-card">
-                <label for="server-url">Server URL</label>
-                <input id="server-url" type="url" placeholder="http://192.168.1.20:8080" autocomplete="url">
-                <button class="primary-button" type="submit">Сохранить адрес</button>
-                <p id="server-form-message" class="form-message" role="status"></p>
-            </form>
-
             <h2>Account</h2>
 
             <div class="settings-card account-card">
@@ -78,7 +69,7 @@
             <div class="settings-heading">
                 <div>
                     <h2>Connected Devices</h2>
-                    <p>Компьютеры, подключённые по уникальному коду</p>
+                    <p>Компьютеры, передающие метрики на этот backend</p>
                 </div>
 
                 <button class="primary-button" id="show-add-device">
@@ -93,36 +84,12 @@
                 <h3>Подключить устройство</h3>
 
                 <p class="form-hint">
-                    Введите уникальный код, который показывает агент NetScope
-                    на нужном компьютере. Входить в аккаунт на нём не нужно.
+                    Запустите агент на компьютере, который хотите подключить. Он автоматически появится здесь после первого обмена с backend.
                 </p>
 
-                <label for="device-code">
-                    Код устройства
-                </label>
-
-                <input
-                    type="text"
-                    id="device-code"
-                    class="code-input"
-                    placeholder="NS-XXXX-XXXX"
-                    autocomplete="off"
-                    autocapitalize="characters"
-                    spellcheck="false"
-                    required
-                >
-
                 <div class="form-actions">
-                    <button type="submit" class="primary-button" id="submit-add-device">
-                        Подключить
-                    </button>
-
                     <button type="button" class="secondary-button" id="cancel-add-device">
-                        Отмена
-                    </button>
-
-                    <button type="button" class="text-button" id="fill-demo-code">
-                        Подставить демо-код
+                        Закрыть
                     </button>
                 </div>
 
@@ -163,18 +130,6 @@
 
                 </div>
 
-                <div class="session-item">
-
-                    <div class="session-icon">DEMO</div>
-
-                    <div class="session-info">
-                        <strong>Demo Session</strong>
-                        <span>Демонстрационный сеанс</span>
-                    </div>
-
-                    <span class="session-status inactive">Demo</span>
-
-                </div>
 
             </div>
 

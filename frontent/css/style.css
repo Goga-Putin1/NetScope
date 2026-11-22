@@ -283,11 +283,40 @@ select {
     border-radius: var(--radius);
 }
 
-.chart-card h3 {
+.chart-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
     margin-bottom: 16px;
+}
+
+.chart-card h3 {
     color: var(--muted);
     font-size: 14px;
     font-weight: 500;
+}
+
+.chart-heading p {
+    margin-top: 4px;
+    color: var(--faint);
+    font-size: 12px;
+}
+
+.chart-heading select {
+    min-width: 180px;
+    max-width: 45%;
+    height: 36px;
+    padding: 0 32px 0 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 13px;
+}
+
+.expandable-device.selected {
+    border-color: var(--accent);
 }
 
 .chart-wrap {
@@ -1114,6 +1143,15 @@ tr:last-child td {
 
     .chart-card {
         padding: 18px;
+    }
+
+    .chart-heading {
+        flex-direction: column;
+    }
+
+    .chart-heading select {
+        width: 100%;
+        max-width: none;
     }
 
     .chart-wrap {
