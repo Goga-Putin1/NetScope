@@ -72,7 +72,7 @@ function createResourceBar(label, value, online) {
     const resource = label.toLowerCase();
 
     return `
-        <div class="resource" data-rosource="${resource}">
+        <div class="resource" data-resource="${resource}">
             <div class="resource-info">
                 <span>${label}</span>
                 <span class="resource-value">${displayedValue}%</span>
